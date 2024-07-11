@@ -7,6 +7,9 @@ menu = '''
   [2] Withdraw
   [3] Balance
   [4] Extract 
+  [5] Create user
+  [6] Create account
+
   [0] Exit
 '''
 
@@ -19,20 +22,65 @@ extract = '''
 '''
 withdraw_number = 0;
 withdrawal_limits_per_day = 3;
+users = {
+  '123.456.789-10': {
+    'name': 'John',} 
+}
+agency = '0001'
+accounts = []
+def find_user(cpf: str):
+  return users.get(cpf)
+
+def create_user(users):
+  cpf = input('Enter your CPF: ')
+
+  if find_user(cpf):
+    print('User already exists')
+    return users
+  
+  name = input('Enter your name: ')
+  birthdate = input('Enter your birthdate: ')
+  address = input('Enter your address: ')
+
+  users[cpf] = {
+    'name': name,
+    'birthdate': birthdate,
+    'address': address
+  }
+
+  return users
+  
+
+def create_account():
+  global agency, accounts
+  cpf = input('Enter your CPF: ')
+  account_number = len(accounts) + 1
+  if find_user(cpf):
+
+    account = {
+      'agency': agency,
+      'account': account_number,
+      'cpf': cpf
+    }
+
+    return print('Account created', account)
+  
+  print('User not found')
+  
 
 def add_info_extract(value: float):
   global extract
   now = datetime.datetime.now().strftime("%d/%m/%Y %H:%M:%S")
 
-  signal = '-' if value < 0 else '+'
   extract += f'''
 ------------------------------------
 Date: {now}
-Value: {signal}R${value:.2f}
+Value: R${value:.2f}
 '''
 
-def deposit():
-  global balance
+
+def deposit(balance, /):
+
   deposit = float(input('How much do you want to deposit? R$'))
   while(deposit <= 0):
     print('The value must be greater than 0')
@@ -40,18 +88,15 @@ def deposit():
   
   add_info_extract(deposit)
   balance += deposit
-  
+  print(balance)
   print(f'You deposited R${deposit:.2f} and your new balance is R${balance:.2f}')
+  return balance
 
-def withdraw():
-  global balance 
-  global withdraw_number
-  global withdraw_limit
-  global withdrawal_limits_per_day
+def withdraw(*, balance, withdraw_limit, withdrawal_limits_per_day, withdraw_number):
 
   if(withdraw_number >= withdrawal_limits_per_day):
     print('You have reached the limit of withdrawals per day, please come back tomorrow.')
-    return
+    return  balance, withdraw_limit, withdrawal_limits_per_day, withdraw_number
   
   message = 'How much do you want to withdraw? R$'
   withdraw = float(input(message))
@@ -68,21 +113,29 @@ def withdraw():
 
   print(f'You withdrew {withdraw} and your new balance is {balance}')
 
+  return balance, withdraw_limit, withdrawal_limits_per_day, withdraw_number
+
 while True: 
   print(menu)
   option = int(input('Choose an option: '))
 
   if option == 1:
-    deposit()
+    balance = deposit(balance)
 
   elif option == 2:
-    withdraw()
+   balance, withdraw_limit, withdrawal_limits_per_day, withdraw_number  = withdraw(balance=balance, withdraw_limit=withdraw_limit, withdrawal_limits_per_day=withdrawal_limits_per_day, withdraw_number=withdraw_number)
 
   elif option == 3:
     print(f'Your balance is R${balance:.2f}')
 
   elif option == 4:
     print(extract)
+
+  elif option == 5:
+    users = create_user(users)
+
+  elif option == 6:
+    account = create_account()
 
   elif option == 0:
     break
